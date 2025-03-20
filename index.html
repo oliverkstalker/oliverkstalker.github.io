@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="description" content="Manimation - Texas A&M Math Learning Center: High-quality math explainer videos and animations." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manimation | Texas A&M Math Learning Center</title>
+  <!-- Google Fonts: Montserrat -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header>
+    <div class="container header-container">
+      <div class="logo">
+        <h1>Manimation</h1>
+        <small>Texas A&M Math Learning Center</small>
+      </div>
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-links">
+          <li><a href="#" id="nav-home">Home</a></li>
+          <li><a href="#" id="nav-student">Student Mode</a></li>
+          <li><a href="#" id="nav-educator">Educator Mode</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Landing Page / Hero -->
+    <section id="landing-page" class="page-section hero-section fade-in">
+      <div class="hero-content">
+        <h2>Welcome to Manimation</h2>
+        <p>Your modern hub for high-quality math explainer videos and animations.</p>
+        <div class="hero-buttons">
+          <button id="student-mode-btn">Explore for Students</button>
+          <button id="educator-mode-btn">Enter Educator Portal</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Student Interface -->
+    <section id="student-interface" class="page-section hidden fade-in">
+      <div class="container">
+        <div class="student-filters">
+          <input type="text" id="search-input" placeholder="Search animations..." aria-label="Search animations" />
+          <select id="course-filter" aria-label="Filter by Course">
+            <option value="">All Courses</option>
+            <option value="MATH 142">MATH 142</option>
+            <option value="MATH 151">MATH 151</option>
+            <option value="MATH 152">MATH 152</option>
+            <option value="MATH 171">MATH 171</option>
+            <option value="MATH 172">MATH 172</option>
+            <option value="MATH 304">MATH 304</option>
+          </select>
+          <select id="topic-filter" aria-label="Filter by Topic">
+            <option value="">All Topics</option>
+            <option value="Simplex Method">Simplex Method</option>
+            <option value="Related Rates">Related Rates</option>
+            <option value="Matrix Multiplication">Matrix Multiplication</option>
+            <option value="Differentiation">Differentiation</option>
+            <option value="Integration">Integration</option>
+          </select>
+          <button id="search-btn">Search</button>
+        </div>
+        <div id="student-animation-list" class="animation-grid"></div>
+        <button class="back-btn" id="back-to-home-student">Back to Home</button>
+      </div>
+    </section>
+
+    <!-- Educator Interface -->
+    <section id="educator-interface" class="page-section hidden fade-in">
+      <div class="container">
+        <div class="educator-tabs" role="tablist">
+          <button id="manage-tab-btn" class="tab active" role="tab" aria-selected="true">Manage Animations</button>
+          <button id="add-tab-btn" class="tab" role="tab" aria-selected="false">Add Animation</button>
+        </div>
+        <div id="educator-content">
+          <!-- Manage Section -->
+          <section id="manage-section">
+            <h2>Manage Animations</h2>
+            <div id="educator-animation-list" class="animation-grid"></div>
+          </section>
+          <!-- Add Section -->
+          <section id="add-section" class="hidden">
+            <h2>Add New Animation</h2>
+            <form id="new-animation-form">
+              <div class="form-group">
+                <label for="anim-title">Title:</label>
+                <input type="text" id="anim-title" name="anim-title" required />
+              </div>
+              <div class="form-group">
+                <label for="anim-description">Description:</label>
+                <textarea id="anim-description" name="anim-description" required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="anim-file">Animation File (MP4):</label>
+                <input type="file" id="anim-file" name="anim-file" accept="video/mp4" required />
+              </div>
+              <div class="form-group">
+                <label for="anim-course">Course:</label>
+                <select id="anim-course" required>
+                  <option value="">Select Course</option>
+                  <option value="MATH 142">MATH 142</option>
+                  <option value="MATH 151">MATH 151</option>
+                  <option value="MATH 152">MATH 152</option>
+                  <option value="MATH 171">MATH 171</option>
+                  <option value="MATH 172">MATH 172</option>
+                  <option value="MATH 304">MATH 304</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="anim-topics">Topics (comma separated):</label>
+                <input type="text" id="anim-topics" name="anim-topics" placeholder="e.g., Differentiation, Integration" required />
+              </div>
+              <button type="submit">Add Animation</button>
+            </form>
+          </section>
+        </div>
+        <button class="back-btn" id="back-to-home-educator">Back to Home</button>
+      </div>
+    </section>
+
+    <!-- Video Detail Page -->
+    <section id="video-detail" class="page-section hidden fade-in">
+      <div class="container video-detail-container">
+        <div id="video-detail-content">
+          <!-- Dynamic content will be inserted here -->
+        </div>
+        <button class="back-btn" id="back-to-list">Back to List</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; Texas A&M University Math Learning Center</p>
+    </div>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>

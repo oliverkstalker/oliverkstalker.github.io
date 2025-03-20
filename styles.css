@@ -1,0 +1,431 @@
+/* CSS Variables for Theming */
+:root {
+  --primary-color: #500000; /* TAMU maroon */
+  --secondary-color: #ffffff;
+  --accent-color: #f9f9f9;
+  --bg-gradient: linear-gradient(135deg, rgba(80,0,0,0.85), rgba(80,0,0,0.65));
+  --overlay-color: rgba(0, 0, 0, 0.3);
+  --text-color: #333;
+  --font-family: 'Montserrat', sans-serif;
+  --transition-speed: 0.3s;
+  --border-radius: 8px;
+}
+
+/* Base Reset & Typography */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--accent-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Container */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Header & Navigation */
+header {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.logo small {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links li a {
+  color: var(--secondary-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--transition-speed) ease;
+}
+
+.nav-links li a:hover {
+  color: var(--accent-color);
+}
+
+/* Hero Section */
+.hero-section {
+  background: url('https://via.placeholder.com/1920x800') center/cover no-repeat,
+              var(--bg-gradient);
+  position: relative;
+  padding: 6rem 1rem;
+  text-align: center;
+  color: var(--secondary-color);
+  overflow: hidden;
+}
+
+.hero-section::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--overlay-color);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+  animation: slideIn var(--transition-speed) ease-out;
+}
+
+.hero-section h2 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.hero-section p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.hero-buttons button {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  margin: 0 0.5rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.hero-buttons button:hover {
+  background-color: #660000;
+  transform: scale(1.05);
+}
+
+/* Page Sections */
+.page-section {
+  padding: 2rem 0;
+  opacity: 1;
+  transition: opacity var(--transition-speed) ease;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Fade-in Animation */
+.fade-in {
+  animation: fadeIn 0.5s ease-out both;
+}
+
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(10px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+/* Student Interface */
+.student-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.student-filters input[type="text"],
+.student-filters select {
+  padding: 0.6rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  transition: border-color var(--transition-speed) ease;
+}
+
+.student-filters input[type="text"]:focus,
+.student-filters select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.student-filters button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.student-filters button:hover {
+  background-color: #660000;
+  transform: translateY(-2px);
+}
+
+/* Animation Grid */
+.animation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Animation Card */
+.animation-card {
+  background: var(--secondary-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  cursor: pointer;
+}
+
+.animation-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.animation-card video {
+  width: 100%;
+  display: block;
+}
+
+.card-content {
+  padding: 1rem;
+}
+
+.card-content h3 {
+  font-size: 1.3rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.card-content p {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-details {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+/* Card Actions (for Educators) */
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.card-actions button {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease;
+}
+
+.card-actions button:first-child {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.card-actions button:first-child:hover {
+  background-color: #0056b3;
+}
+
+.card-actions button:last-child {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.card-actions button:last-child:hover {
+  background-color: #a71d2a;
+}
+
+/* Back Button */
+.back-btn {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: block;
+  margin: 1.5rem auto 0;
+  transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.back-btn:hover {
+  background-color: #660000;
+  transform: translateY(-2px);
+}
+
+/* Educator Tabs */
+.educator-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 1.5rem;
+}
+
+.educator-tabs .tab {
+  background: none;
+  border: none;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: border-color var(--transition-speed) ease;
+}
+
+.educator-tabs .tab.active,
+.educator-tabs .tab:hover {
+  border-color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Form Styles */
+form {
+  background: var(--secondary-color);
+  padding: 1.8rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  transition: box-shadow var(--transition-speed) ease;
+}
+
+form:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.form-group input[type="text"],
+.form-group input[type="file"],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: border-color var(--transition-speed) ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="file"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* Video Detail Page */
+.video-detail-container {
+  text-align: center;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+#video-detail-content {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#video-detail-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+#video-detail-content video {
+  width: 80%;
+  max-width: 1080px;
+  height: auto;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Footer */
+footer {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  text-align: center;
+  padding: 1rem 0;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hero-section h2 {
+      font-size: 2.5rem;
+  }
+  .header-container {
+      flex-direction: column;
+      text-align: center;
+  }
+  .nav-links {
+      flex-direction: column;
+      gap: 0.5rem;
+  }
+  #video-detail-content video {
+    width: 100%;
+  }
+}
