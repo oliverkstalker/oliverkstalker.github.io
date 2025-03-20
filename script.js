@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         editBtn.addEventListener("click", e => {
           e.stopPropagation();
           // Placeholder: Implement edit functionality here.
-          alert("Edit functionality is not implemented yet.");
+          alert("Edit functionality is not implemented yet... :( check back in a few days!");
         });
 
         const deleteBtn = document.createElement("button");
