@@ -210,7 +210,11 @@ document.addEventListener("DOMContentLoaded", () => {
     addSection = document.getElementById("add-section"),
     educatorAnimationList = document.getElementById("educator-animation-list"),
     newAnimationForm = document.getElementById("new-animation-form"),
-    backToListBtn = document.getElementById("back-to-list");
+    backToListBtn = document.getElementById("back-to-list"),
+    uploadPythonTabBtn = document.getElementById("upload-python-tab-btn"),
+    uploadPythonSection = document.getElementById("upload-python-section"),
+    pythonFileInput = document.getElementById("python-file"),
+    renderSaveBtn = document.getElementById("render-save-btn");
 
   /* ============================
      Initialize Data
@@ -298,7 +302,19 @@ document.addEventListener("DOMContentLoaded", () => {
     manageTabBtn.classList.remove("active");
     addSection.classList.remove("hidden");
     manageSection.classList.add("hidden");
+
+    if (!pythonEditorInitialized) {
+      window.pythonEditor = CodeMirror.fromTextArea(document.getElementById("python-code-editor"), {
+        mode: "python",
+        lineNumbers: true,
+        theme: "default"
+
+      });
+      pythonEditor.setSize("100%", "300px");
+      pythonEditorInitialized = true;
+    }
   });
+  
 
   newAnimationForm.addEventListener("submit", e => {
     e.preventDefault();
@@ -328,5 +344,77 @@ document.addEventListener("DOMContentLoaded", () => {
     // Switch back to Manage tab and reset form.
     manageTabBtn.click();
     newAnimationForm.reset();
+
+
+    
   });
+
+  // Initialize CodeMirror for the Python code editor
+  let pythonEditor = CodeMirror.fromTextArea(document.getElementById("python-code-editor"), {
+    mode: "python",
+    lineNumbers: true,
+    theme: "default"
+  });
+  pythonEditor.setSize("100%", "300px");
+    
+
+  // Load .py file into editor
+  pythonFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        pythonEditor.setValue(event.target.result);
+      };
+      reader.readAsText(file);
+    }
+  });
+
+  // Handle render and save
+  renderSaveBtn.addEventListener("click", () => {
+    const title = document.getElementById("anim-title").value.trim();
+    const description = document.getElementById("anim-description").value.trim();
+    const course = document.getElementById("anim-course").value;
+    const topicsRaw = document.getElementById("anim-topics").value;
+    const topics = topicsRaw.split(",").map(t => t.trim()).filter(Boolean);
+    const filename = pythonFileInput.files[0]?.name || "scene1.py";
+    const code = pythonEditor.getValue();
+  
+    if (!title || !description || !course || topics.length === 0 || !code) {
+      alert("Please fill in all required fields and ensure code is provided.");
+      return;
+    }
+  
+    fetch("http://localhost:5000/render-manim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename, code })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const videoUrl = data.videoUrl;
+      const animations = DataModule.getAnimations();
+      const newId = animations.length > 0 ? Math.max(...animations.map(a => a.id)) + 1 : 1;
+  
+      const newAnimation = {
+        id: newId,
+        title,
+        description,
+        file: videoUrl,
+        course,
+        topics
+      };
+  
+      animations.push(newAnimation);
+      DataModule.setAnimations(animations);
+      manageTabBtn.click(); // switch back to Manage tab
+      document.getElementById("new-animation-form").reset();
+      pythonEditor.setValue("");
+    })
+    .catch(err => {
+      console.error("Error rendering Manim code:", err);
+      alert("Failed to render the animation. Please try again.");
+    });
+  });
+
 });

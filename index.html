@@ -8,6 +8,9 @@
   <!-- Google Fonts: Montserrat -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
 </head>
 <body>
   <!-- Header / Navigation -->
@@ -76,6 +79,7 @@
         <div class="educator-tabs" role="tablist">
           <button id="manage-tab-btn" class="tab active" role="tab" aria-selected="true">Manage Animations</button>
           <button id="add-tab-btn" class="tab" role="tab" aria-selected="false">Add Animation</button>
+          <!-- <button id="upload-python-tab-btn" class="tab" role="tab" aria-selected="false">Upload Python</button> -->
         </div>
         <div id="educator-content">
           <!-- Manage Section -->
@@ -96,8 +100,13 @@
                 <textarea id="anim-description" name="anim-description" required></textarea>
               </div>
               <div class="form-group">
-                <label for="anim-file">Animation File (MP4):</label>
-                <input type="file" id="anim-file" name="anim-file" accept="video/mp4" required />
+                <label for="python-file">Python File (.py):</label>
+                <input type="file" id="python-file" name="python-file" accept=".py" />
+              </div>
+              <div class="form-group">
+                <label for="python-code-editor">Uploaded Code:</label>
+                <!-- A textarea that will be enhanced with CodeMirror -->
+                <textarea id="python-code-editor" name="python-code-editor" rows="10"></textarea>
               </div>
               <div class="form-group">
                 <label for="anim-course">Course:</label>
@@ -115,9 +124,11 @@
                 <label for="anim-topics">Topics (comma separated):</label>
                 <input type="text" id="anim-topics" name="anim-topics" placeholder="e.g., Differentiation, Integration" required />
               </div>
-              <button type="submit">Add Animation</button>
+              <button type="button" id="render-save-btn">Render and Save</button>
             </form>
           </section>
+          <!-- Upload Python Animation Section -->
+          
         </div>
         <button class="back-btn" id="back-to-home-educator">Back to Home</button>
       </div>
