@@ -7,7 +7,7 @@
   <title>Manimation | Texas A&M Math Learning Center</title>
   <!-- Google Fonts: Montserrat -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
@@ -79,7 +79,6 @@
         <div class="educator-tabs" role="tablist">
           <button id="manage-tab-btn" class="tab active" role="tab" aria-selected="true">Manage Animations</button>
           <button id="add-tab-btn" class="tab" role="tab" aria-selected="false">Add Animation</button>
-          <!-- <button id="upload-python-tab-btn" class="tab" role="tab" aria-selected="false">Upload Python</button> -->
         </div>
         <div id="educator-content">
           <!-- Manage Section -->
@@ -127,8 +126,6 @@
               <button type="button" id="render-save-btn">Render and Save</button>
             </form>
           </section>
-          <!-- Upload Python Animation Section -->
-          
         </div>
         <button class="back-btn" id="back-to-home-educator">Back to Home</button>
       </div>
@@ -151,6 +148,7 @@
       <p>&copy; Texas A&M University Math Learning Center</p>
     </div>
   </footer>
-  <script src="script.js"></script>
+  <!-- Load the main JS file as a module -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

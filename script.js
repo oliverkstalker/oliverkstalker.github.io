@@ -211,8 +211,6 @@ document.addEventListener("DOMContentLoaded", () => {
     educatorAnimationList = document.getElementById("educator-animation-list"),
     newAnimationForm = document.getElementById("new-animation-form"),
     backToListBtn = document.getElementById("back-to-list"),
-    uploadPythonTabBtn = document.getElementById("upload-python-tab-btn"),
-    uploadPythonSection = document.getElementById("upload-python-section"),
     pythonFileInput = document.getElementById("python-file"),
     renderSaveBtn = document.getElementById("render-save-btn");
 

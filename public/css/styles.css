@@ -412,6 +412,17 @@ footer {
   font-size: 0.9rem;
 }
 
+#python-code-editor {
+  display: none !important; /* hide raw <textarea> */
+}
+
+.CodeMirror {
+  min-height: 300px;
+  border: 1px solid #ccc;
+  font-family: monospace;
+  font-size: 14px;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .hero-section h2 {
