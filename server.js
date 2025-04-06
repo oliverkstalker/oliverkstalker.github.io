@@ -34,7 +34,7 @@ app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-s
+
 app.get('/api/animations', (req, res) => {
   const rows = db.prepare('SELECT * FROM animations ORDER BY createdAt DESC').all();
   const animations = rows.map(row => ({
