@@ -80,50 +80,51 @@ function renderAnimations(listElement, { isEducator = false, filterFn = () => tr
 }
 
 /* NEW: Render animations as horizontal scrolling rows grouped by course or topic */
-function renderAnimationsRows(listElement, { groupBy = "course", filterFn = () => true, isEducator = false } = {}) {
+function renderAnimationsRows(listElement, {
+    groupBy = "course",
+    filterFn = () => true,
+    isEducator = false,
+    animations = []
+  } = {}) {
     listElement.innerHTML = "";
-    const animations = getAnimations().filter(filterFn);
+  
+    const filtered = animations.filter(filterFn);
     const groups = {};
-
-    // Group animations based on the selected grouping method
+  
     if (groupBy === "course") {
-        animations.forEach(anim => {
-            if (!groups[anim.course]) groups[anim.course] = [];
-            groups[anim.course].push(anim);
-        });
+      filtered.forEach(anim => {
+        if (!groups[anim.course]) groups[anim.course] = [];
+        groups[anim.course].push(anim);
+      });
     } else if (groupBy === "topic") {
-        animations.forEach(anim => {
-            anim.topics.forEach(topic => {
-                if (!groups[topic]) groups[topic] = [];
-                groups[topic].push(anim);
-            });
+      filtered.forEach(anim => {
+        anim.topics.forEach(topic => {
+          if (!groups[topic]) groups[topic] = [];
+          groups[topic].push(anim);
         });
+      });
     }
-
-    // For each group, create a row with a header and horizontal scroll container
+  
     for (const group in groups) {
-        // Row container
-        const rowContainer = document.createElement("div");
-        rowContainer.classList.add("animation-row");
-
-        // Group title/header
-        const header = document.createElement("h2");
-        header.textContent = group;
-        rowContainer.appendChild(header);
-
-        // Horizontal scrolling container
-        const scrollContainer = document.createElement("div");
-        scrollContainer.classList.add("scroll-container");
-
-        groups[group].forEach(anim => {
-            scrollContainer.appendChild(createAnimationCard(anim, isEducator));
-        });
-
-        rowContainer.appendChild(scrollContainer);
-        listElement.appendChild(rowContainer);
+      const rowContainer = document.createElement("div");
+      rowContainer.classList.add("animation-row");
+  
+      const header = document.createElement("h2");
+      header.textContent = group;
+      rowContainer.appendChild(header);
+  
+      const scrollContainer = document.createElement("div");
+      scrollContainer.classList.add("scroll-container");
+  
+      groups[group].forEach(anim => {
+        scrollContainer.appendChild(createAnimationCard(anim, isEducator));
+      });
+  
+      rowContainer.appendChild(scrollContainer);
+      listElement.appendChild(rowContainer);
     }
-}
-
+  }
+  
 function showSection(section) {
     document.querySelectorAll(".page-section").forEach(sec => sec.classList.add("hidden"));
     section.classList.remove("hidden");

@@ -82,9 +82,11 @@ studentModeBtn.addEventListener("click", () => {
 
 educatorModeBtn.addEventListener("click", () => {
   showSection(educatorInterface);
+  const animations = getAnimations();
   renderAnimationsRows(educatorAnimationList, {
     isEducator: true,
-    groupBy: "course" // or "topic" if you prefer
+    groupBy: "course", // or "topic" if you prefer
+    animations
   });
   
 });
@@ -96,9 +98,11 @@ navStudent.addEventListener("click", () => {
 });
 navEducator.addEventListener("click", () => {
   showSection(educatorInterface);
+  const animations = getAnimations();
   renderAnimationsRows(educatorAnimationList, {
     isEducator: true,
-    groupBy: "course" // or "topic" if you prefer
+    groupBy: "course", // or "topic" if you prefer
+    animations
   });
   
 });
@@ -131,9 +135,11 @@ manageTabBtn.addEventListener("click", () => {
   addTabBtn.classList.remove("active");
   manageSection.classList.remove("hidden");
   addSection.classList.add("hidden");
+  const animations = getAnimations();
   renderAnimationsRows(educatorAnimationList, {
     isEducator: true,
-    groupBy: "course" // or "topic" if you prefer
+    groupBy: "course", // or "topic" if you prefer
+    animations
   });
   
 });
