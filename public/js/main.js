@@ -203,48 +203,84 @@ pythonFileInput.addEventListener("change", (e) => {
 });
 
 // Handle render and save
-renderSaveBtn.addEventListener("click", () => {
+renderSaveBtn.addEventListener("click", async () => {
   const title = document.getElementById("anim-title").value.trim();
   const description = document.getElementById("anim-description").value.trim();
   const course = document.getElementById("anim-course").value;
   const topicsRaw = document.getElementById("anim-topics").value;
   const topics = topicsRaw.split(",").map(t => t.trim()).filter(Boolean);
-  const filename = pythonFileInput.files[0]?.name || "scene1.py";
-  const code = pythonEditor.getValue();
 
-  if (!title || !description || !course || topics.length === 0 || !code) {
-    alert("Please fill in all required fields and ensure code is provided.");
+  const fileInput = document.getElementById("anim-file");
+  const mp4File = fileInput.files[0];
+
+  const code = pythonEditor?.getValue().trim();
+  const hasPython = code && code.length > 0;
+
+  if (!title || !description || !course || topics.length === 0) {
+    alert("Please fill in all required fields.");
     return;
   }
 
-  fetch("http://localhost:5000/render-manim", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ filename, code })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const videoUrl = data.videoUrl;
-    const animations = getAnimations();
-    const newId = animations.length > 0 ? Math.max(...animations.map(a => a.id)) + 1 : 1;
+  let fileUrl = "default.mp4";
 
-    const newAnimation = {
-      id: newId,
-      title,
-      description,
-      file: videoUrl,
-      course,
-      topics
-    };
+  try {
+    // CASE 1: User uploaded MP4
+    if (mp4File) {
+      const formData = new FormData();
+      formData.append("videoFile", mp4File);
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("course", course);
+      formData.append("topics", topics.join(','));
 
-    animations.push(newAnimation);
-    localStorage.setItem("animations", JSON.stringify(animations));
-    manageTabBtn.click(); // switch back to Manage tab
+      const res = await fetch("/api/animations", {
+        method: "POST",
+        body: formData
+      });
+      const result = await res.json();
+      fileUrl = result.file;
+    }
+
+    // CASE 2: User entered Python code
+    else if (hasPython) {
+      const filename = "scene1.py"; // can be replaced with actual filename if uploaded
+      const res = await fetch("/render-manim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename, code })
+      });
+      const data = await res.json();
+      fileUrl = data.videoUrl;
+
+      // Save to database
+      const anim = {
+        title,
+        description,
+        course,
+        topics,
+        file: fileUrl
+      };
+      await fetch("/api/animations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(anim)
+      });
+    }
+
+    // CASE 3: Neither uploaded
+    else {
+      alert("Please upload either an MP4 or provide Python code.");
+      return;
+    }
+
+    // Reset form and go back
+    manageTabBtn.click();
     newAnimationForm.reset();
-    pythonEditor.setValue("");
-  })
-  .catch(err => {
-    console.error("Error rendering Manim code:", err);
-    alert("Failed to render the animation. Please try again.");
-  });
+    if (pythonEditor) pythonEditor.setValue("");
+
+  } catch (err) {
+    console.error("Error saving animation:", err);
+    alert("An error occurred while saving the animation.");
+  }
 });
+

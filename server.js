@@ -28,6 +28,47 @@ db.exec(`
   createdAt TEXT
 );`);
 
+// Seed placeholder data if database is empty
+const existing = db.prepare('SELECT COUNT(*) AS count FROM animations').get();
+if (existing.count === 0) {
+  const seed = db.prepare(`
+    INSERT INTO animations (title, description, file, course, topics, createdAt)
+    VALUES (?, ?, ?, ?, ?, datetime('now'))
+  `);
+
+  const placeholders = [
+    ["Derivatives 101", "An introduction to derivatives.", "/videos/sample1.mp4", "MATH 151", "Differentiation"],
+    ["Chain Rule", "Explains the chain rule.", "/videos/sample2.mp4", "MATH 151", "Differentiation,Chain Rule"],
+    ["Integration Basics", "Definite vs Indefinite Integrals", "/videos/sample3.mp4", "MATH 152", "Integration"],
+    ["Matrix Multiplication", "Matrix operations with examples.", "/videos/sample4.mp4", "MATH 304", "Matrix Multiplication"],
+    ["Limits and Continuity", "Understanding limits and continuity.", "/videos/sample5.mp4", "MATH 150", "Limits,Continuity"],
+    ["Partial Derivatives", "Introduction to partial derivatives.", "/videos/sample6.mp4", "MATH 251", "Partial Derivatives"],
+    ["Eigenvalues and Eigenvectors", "Explains eigenvalues and eigenvectors.", "/videos/sample7.mp4", "MATH 304", "Eigenvalues,Eigenvectors"],
+    ["Taylor Series", "Introduction to Taylor series.", "/videos/sample8.mp4", "MATH 152", "Taylor Series"],
+    ["Probability Basics", "Understanding basic probability.", "/videos/sample9.mp4", "STAT 101", "Probability"],
+    ["Linear Transformations", "Explains linear transformations.", "/videos/sample10.mp4", "MATH 304", "Linear Algebra"],
+    ["Gradient Descent", "Optimization using gradient descent.", "/videos/sample11.mp4", "MATH 251", "Optimization,Gradient Descent"],
+    ["Fourier Series", "Introduction to Fourier series.", "/videos/sample12.mp4", "MATH 352", "Fourier Series"],
+    ["Laplace Transforms", "Explains Laplace transforms.", "/videos/sample13.mp4", "MATH 353", "Laplace Transforms"],
+    ["Set Theory Basics", "Introduction to set theory.", "/videos/sample14.mp4", "MATH 101", "Set Theory"],
+    ["Complex Numbers", "Understanding complex numbers.", "/videos/sample15.mp4", "MATH 201", "Complex Numbers"],
+    ["Vector Calculus", "Basics of vector calculus.", "/videos/sample16.mp4", "MATH 251", "Vector Calculus"],
+    ["Probability Distributions", "Explains probability distributions.", "/videos/sample17.mp4", "STAT 201", "Probability,Distributions"],
+    ["Differential Equations", "Introduction to differential equations.", "/videos/sample18.mp4", "MATH 252", "Differential Equations"],
+    ["Numerical Methods", "Basics of numerical methods.", "/videos/sample19.mp4", "MATH 301", "Numerical Methods"],
+    ["Statistics Fundamentals", "Understanding basic statistics.", "/videos/sample20.mp4", "STAT 101", "Statistics"],
+    ["Optimization Techniques", "Explains optimization techniques.", "/videos/sample21.mp4", "MATH 251", "Optimization"],
+    ["Probability and Bayes' Theorem", "Introduction to Bayes' theorem.", "/videos/sample22.mp4", "STAT 201", "Probability,Bayes' Theorem"]
+  ];
+
+  for (const [title, description, file, course, topics] of placeholders) {
+    seed.run(title, description, file, course, topics);
+  }
+
+  console.log("✅ Seeded placeholder animations.");
+}
+
+
 app.use(cors());
 app.use(bodyParser.json());
 
