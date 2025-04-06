@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="description" content="Manimation - Texas A&M Math Learning Center: High-quality math explainer videos and animations." />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Manimation | Texas A&M Math Learning Center</title>
+  <title>Texas A&M Math Learning Center</title>
   <!-- Google Fonts: Montserrat -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="public/css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
@@ -17,7 +17,7 @@
   <header>
     <div class="container header-container">
       <div class="logo">
-        <h1>Manimation</h1>
+        <h1>Math Animation Tool</h1>
         <small>Texas A&M Math Learning Center</small>
       </div>
       <nav aria-label="Primary Navigation">
@@ -35,7 +35,7 @@
     <!-- Landing Page / Hero -->
     <section id="landing-page" class="page-section hero-section fade-in">
       <div class="hero-content">
-        <h2>Welcome to Manimation</h2>
+        <h2>Welcome to the Math Animation Tool</h2>
         <p>Your modern hub for high-quality math explainer videos and animations.</p>
         <div class="hero-buttons">
           <button id="student-mode-btn">Explore for Students</button>
@@ -68,7 +68,7 @@
           </select>
           <button id="search-btn">Search</button>
         </div>
-        <div id="student-animation-list" class="animation-grid"></div>
+        <div id="student-animation-list"></div>
         <button class="back-btn" id="back-to-home-student">Back to Home</button>
       </div>
     </section>
@@ -97,6 +97,10 @@
               <div class="form-group">
                 <label for="anim-description">Description:</label>
                 <textarea id="anim-description" name="anim-description" required></textarea>
+              </div>
+              <div clas="form-group">
+                <label for="anim-file">Upload MP4 File:</label>
+                <input type="file" id="anim-file" name="videoFile" accept="video/mp4" required />
               </div>
               <div class="form-group">
                 <label for="python-file">Python File (.py):</label>
@@ -149,6 +153,6 @@
     </div>
   </footer>
   <!-- Load the main JS file as a module -->
-  <script type="module" src="public/js/main.js"></script>
+  <script type="module" src="/js/main.js"></script>
 </body>
 </html>

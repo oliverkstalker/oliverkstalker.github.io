@@ -12,7 +12,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const Database = require('better-sqlite3');  
-const db = new Database('./animations.db')
+const db = new Database('./animations.db');
+
+const multer = require('multer');
+const upload = multer({
+  dest: path.join(__dirname, '..', 'public', 'videos')
+})
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS animations (
@@ -53,30 +58,26 @@ app.get('/api/animations', (req, res) => {
 });
 
 
-app.post('/api/animations', (req, res) => {
-  const {
-    title, description, file, course, topics = [], difficulty, instructor,
-    duration, resourceType
-  } = req.body;
-
+app.post('/api/animations', upload.single('videoFile'), (req, res) => {
+  const { title, description, course } = req.body;g
+  const topics = req.body.topics ? req.body.topics.split(',') : [];
+  const file = req.file ? `/videos/${req.file.filename}` : req.body.file || '';
+  
   const stmt = db.prepare(`
     INSERT INTO animations 
-    (title, description, file, course, topics, difficulty, instructor, duration, resourceType, createdAt) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    (title, description, file, course, topics, createdAt) 
+    VALUES (?, ?, ?, ?, ?, datetime('now'))
   `);
-
   const result = stmt.run(
-    title, description, file, course,
-    topics.join(','), difficulty, instructor, duration, resourceType
+    title, description, file, course, topics.join(',')
   );
-
   const newAnimation = {
     id: result.lastInsertRowid,
-    title, description, file, course, topics, difficulty, instructor, duration, resourceType
+    title, description, file, course, topics
   };
-
   res.status(201).json(newAnimation);
 });
+
 
 
 app.delete('/api/animations/:id', (req, res) => {
