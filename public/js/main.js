@@ -52,10 +52,12 @@ function updateSort() {
 }
 
 // Filtering logic now using renderAnimationsRows
-function filterAnimations() {
+async function filterAnimations() {
   const searchText = searchInput.value.toLowerCase();
   const selectedCourse = courseFilter.value;
   const selectedTopic = topicFilter.value;
+  
+  const animations = await getAnimations();
 
   renderAnimationsRows(studentAnimationList, {
     groupBy: currentGroupBy,
@@ -66,10 +68,10 @@ function filterAnimations() {
       const matchesCourse = selectedCourse ? anim.course === selectedCourse : true;
       const matchesTopic = selectedTopic ? anim.topics.includes(selectedTopic) : true;
       return matchesSearch && matchesCourse && matchesTopic;
-    }
+    },
+    animations  // Pass the animations array explicitly
   });
 }
-
 const debouncedFilter = debounce(filterAnimations, 300);
 
 // Navigation Events
@@ -157,14 +159,15 @@ addTabBtn.addEventListener("click", () => {
 });
 
 // New Animation Form Handling
-newAnimationForm.addEventListener("submit", e => {
+newAnimationForm.addEventListener("submit", async e => {
   e.preventDefault();
 
   const title = document.getElementById("anim-title").value.trim();
   const description = document.getElementById("anim-description").value.trim();
+  // For file upload, we assume the file is uploaded via the form.
+  // Here, we simply get the file name as a placeholder.
   const fileInput = document.getElementById("anim-file");
-  const file = fileInput ? fileInput.files[0] : null;
-  const filePath = file ? file.name : "default.mp4";
+  const fileUrl = fileInput && fileInput.files[0] ? fileInput.files[0].name : "default.mp4";
   const course = document.getElementById("anim-course").value;
   const topicsRaw = document.getElementById("anim-topics").value;
   const topics = topicsRaw.split(",").map(t => t.trim()).filter(t => t);
@@ -174,17 +177,17 @@ newAnimationForm.addEventListener("submit", e => {
     return;
   }
 
-  const animations = getAnimations();
-  const newId = animations.length > 0 ? Math.max(...animations.map(a => a.id)) + 1 : 1;
-  const newAnimation = { id: newId, title, description, file: filePath, course, topics };
+  const newAnimation = { title, description, file: fileUrl, course, topics };
 
-  animations.push(newAnimation);
-  localStorage.setItem("animations", JSON.stringify(animations));
-
-  // Switch back to Manage tab and reset form.
-  manageTabBtn.click();
-  newAnimationForm.reset();
+  try {
+    await addAnimation(newAnimation);
+    // After successful addition, refresh the educator list.
+    manageTabBtn.click();
+  } catch (err) {
+    alert("Failed to add animation. Please try again.");
+  }
 });
+
 
 // Load .py file into editor
 pythonFileInput.addEventListener("change", (e) => {

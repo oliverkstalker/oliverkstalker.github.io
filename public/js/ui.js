@@ -45,15 +45,20 @@ function createAnimationCard(anim, isEducator = false) {
 
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Delete";
-        deleteBtn.addEventListener("click", e => {
+        deleteBtn.addEventListener("click", async e => {
             e.stopPropagation();
-            const animations = getAnimations().filter(a => a.id !== anim.id);
-            setAnimations(animations);
-            // Re-render the educator list immediately
-            const educatorAnimationList = document.getElementById("educator-animation-list");
-            renderAnimations(educatorAnimationList, { isEducator: true });
-        });
-
+            try {
+              await deleteAnimation(anim.id);
+              const educatorAnimationList = document.getElementById("educator-animation-list");
+              renderAnimationsRows(educatorAnimationList, {
+                isEducator: true,
+                groupBy: "course"
+              });
+            } catch (err) {
+              console.error("Error deleting animation", err);
+              alert("Failed to delete animation. Please try again.");
+            }
+          });
         btnContainer.append(editBtn, deleteBtn);
         content.appendChild(btnContainer);
     } else {
