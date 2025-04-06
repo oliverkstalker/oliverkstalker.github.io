@@ -130,12 +130,12 @@ if (sortCourseBtn && sortTopicBtn) {
 }
 
 // Educator Tabs & Form Handling
-manageTabBtn.addEventListener("click", () => {
+manageTabBtn.addEventListener("click", async () => {
   manageTabBtn.classList.add("active");
   addTabBtn.classList.remove("active");
   manageSection.classList.remove("hidden");
   addSection.classList.add("hidden");
-  const animations = getAnimations();
+  const animations = await getAnimations();
   renderAnimationsRows(educatorAnimationList, {
     isEducator: true,
     groupBy: "course", // or "topic" if you prefer
