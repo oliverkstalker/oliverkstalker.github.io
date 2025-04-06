@@ -80,9 +80,9 @@ studentModeBtn.addEventListener("click", () => {
   filterAnimations();
 });
 
-educatorModeBtn.addEventListener("click", () => {
+educatorModeBtn.addEventListener("click", async () => {
   showSection(educatorInterface);
-  const animations = getAnimations();
+  const animations = await getAnimations();
   renderAnimationsRows(educatorAnimationList, {
     isEducator: true,
     groupBy: "course", // or "topic" if you prefer
@@ -96,13 +96,13 @@ navStudent.addEventListener("click", () => {
   showSection(studentInterface);
   filterAnimations();
 });
-navEducator.addEventListener("click", () => {
+navEducator.addEventListener("click", async () => {
   showSection(educatorInterface);
-  const animations = getAnimations();
+  const animations = await getAnimations();
   renderAnimationsRows(educatorAnimationList, {
+    animations,
     isEducator: true,
-    groupBy: "course", // or "topic" if you prefer
-    animations
+    groupBy: "course" // or "topic" if you prefer
   });
   
 });
