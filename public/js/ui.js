@@ -23,7 +23,7 @@ function createAnimationCard(anim, isEducator = false) {
     const desc = document.createElement("p");
     desc.textContent = anim.description;
 
-    // Display new metadata: course, topics, difficulty, duration, instructor, resource type.
+    // Display new metadata: course, topics, etc.
     const details = document.createElement("p");
     details.classList.add("card-details");
     details.innerHTML = `<strong>Course:</strong> ${anim.course}<br />
@@ -39,19 +39,19 @@ function createAnimationCard(anim, isEducator = false) {
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        alert("Edit functionality is not implemented yet... check back in a few days!");
+            e.stopPropagation();
+            alert("Edit functionality is not implemented yet... check back in a few days!");
         });
 
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Delete";
         deleteBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        const animations = getAnimations().filter(a => a.id !== anim.id);
-        setAnimations(animations);
-        // Re-render the educator list immediately
-        const educatorAnimationList = document.getElementById("educator-animation-list");
-        renderAnimations(educatorAnimationList, { isEducator: true });
+            e.stopPropagation();
+            const animations = getAnimations().filter(a => a.id !== anim.id);
+            setAnimations(animations);
+            // Re-render the educator list immediately
+            const educatorAnimationList = document.getElementById("educator-animation-list");
+            renderAnimations(educatorAnimationList, { isEducator: true });
         });
 
         btnContainer.append(editBtn, deleteBtn);
@@ -59,28 +59,73 @@ function createAnimationCard(anim, isEducator = false) {
     } else {
         // For non-educator cards, clicking shows video details.
         card.addEventListener("click", e => {
-        if (!["BUTTON", "VIDEO"].includes(e.target.tagName)) {
-            showDetail(anim);
-        }
+            if (!["BUTTON", "VIDEO"].includes(e.target.tagName)) {
+                showDetail(anim);
+            }
         });
     }
     return card;
 }
 
-
+// Existing grid-based rendering function
 function renderAnimations(listElement, { isEducator = false, filterFn = () => true } = {}) {
-  listElement.innerHTML = "";
-  const animations = getAnimations().filter(filterFn);
-  animations.forEach(anim => listElement.appendChild(createAnimationCard(anim, isEducator)));
+    listElement.innerHTML = "";
+    const animations = getAnimations().filter(filterFn);
+    animations.forEach(anim => listElement.appendChild(createAnimationCard(anim, isEducator)));
+}
+
+/* NEW: Render animations as horizontal scrolling rows grouped by course or topic */
+function renderAnimationsRows(listElement, { groupBy = "course", filterFn = () => true, isEducator = false } = {}) {
+    listElement.innerHTML = "";
+    const animations = getAnimations().filter(filterFn);
+    const groups = {};
+
+    // Group animations based on the selected grouping method
+    if (groupBy === "course") {
+        animations.forEach(anim => {
+            if (!groups[anim.course]) groups[anim.course] = [];
+            groups[anim.course].push(anim);
+        });
+    } else if (groupBy === "topic") {
+        animations.forEach(anim => {
+            anim.topics.forEach(topic => {
+                if (!groups[topic]) groups[topic] = [];
+                groups[topic].push(anim);
+            });
+        });
+    }
+
+    // For each group, create a row with a header and horizontal scroll container
+    for (const group in groups) {
+        // Row container
+        const rowContainer = document.createElement("div");
+        rowContainer.classList.add("animation-row");
+
+        // Group title/header
+        const header = document.createElement("h2");
+        header.textContent = group;
+        rowContainer.appendChild(header);
+
+        // Horizontal scrolling container
+        const scrollContainer = document.createElement("div");
+        scrollContainer.classList.add("scroll-container");
+
+        groups[group].forEach(anim => {
+            scrollContainer.appendChild(createAnimationCard(anim, isEducator));
+        });
+
+        rowContainer.appendChild(scrollContainer);
+        listElement.appendChild(rowContainer);
+    }
 }
 
 function showSection(section) {
-  document.querySelectorAll(".page-section").forEach(sec => sec.classList.add("hidden"));
-  section.classList.remove("hidden");
-  // Re-trigger fade-in animation.
-  section.classList.remove("fade-in");
-  void section.offsetWidth; // force reflow
-  section.classList.add("fade-in");
+    document.querySelectorAll(".page-section").forEach(sec => sec.classList.add("hidden"));
+    section.classList.remove("hidden");
+    // Re-trigger fade-in animation.
+    section.classList.remove("fade-in");
+    void section.offsetWidth; // force reflow
+    section.classList.add("fade-in");
 }
 
-export { createAnimationCard, renderAnimations, showSection };
+export { createAnimationCard, renderAnimations, renderAnimationsRows, showSection };

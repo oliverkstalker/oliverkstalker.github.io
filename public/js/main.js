@@ -1,6 +1,6 @@
 // main.js
 import { initialize, getAnimations } from './data.js';
-import { renderAnimations, showSection } from './ui.js';
+import { renderAnimations, renderAnimationsRows, showSection } from './ui.js';
 import { showDetail } from './video.js';
 import { debounce } from './filters.js';
 
@@ -33,13 +33,32 @@ const landingPage = document.getElementById("landing-page"),
       pythonFileInput = document.getElementById("python-file"),
       renderSaveBtn = document.getElementById("render-save-btn");
 
-// Filtering logic
+// New: Sort Toggle Elements and variable for grouping mode.
+// (Make sure you add these buttons in your HTML.)
+const sortCourseBtn = document.getElementById("sort-course"),
+      sortTopicBtn = document.getElementById("sort-topic");
+let currentGroupBy = "course"; // default grouping
+
+// Function to update toggle button styles and re-render.
+function updateSort() {
+  if (currentGroupBy === "course") {
+    sortCourseBtn.classList.add("active");
+    sortTopicBtn.classList.remove("active");
+  } else {
+    sortCourseBtn.classList.remove("active");
+    sortTopicBtn.classList.add("active");
+  }
+  filterAnimations();
+}
+
+// Filtering logic now using renderAnimationsRows
 function filterAnimations() {
   const searchText = searchInput.value.toLowerCase();
   const selectedCourse = courseFilter.value;
   const selectedTopic = topicFilter.value;
 
-  renderAnimations(studentAnimationList, {
+  renderAnimationsRows(studentAnimationList, {
+    groupBy: currentGroupBy,
     filterFn: anim => {
       const matchesSearch =
         anim.title.toLowerCase().includes(searchText) ||
@@ -61,7 +80,11 @@ studentModeBtn.addEventListener("click", () => {
 
 educatorModeBtn.addEventListener("click", () => {
   showSection(educatorInterface);
-  renderAnimations(educatorAnimationList, { isEducator: true });
+  renderAnimationsRows(educatorAnimationList, {
+    isEducator: true,
+    groupBy: "course" // or "topic" if you prefer
+  });
+  
 });
 
 navHome.addEventListener("click", () => showSection(landingPage));
@@ -71,7 +94,11 @@ navStudent.addEventListener("click", () => {
 });
 navEducator.addEventListener("click", () => {
   showSection(educatorInterface);
-  renderAnimations(educatorAnimationList, { isEducator: true });
+  renderAnimationsRows(educatorAnimationList, {
+    isEducator: true,
+    groupBy: "course" // or "topic" if you prefer
+  });
+  
 });
 
 backToHomeStudent.addEventListener("click", () => showSection(landingPage));
@@ -84,13 +111,29 @@ searchInput.addEventListener("keyup", debouncedFilter);
 courseFilter.addEventListener("change", filterAnimations);
 topicFilter.addEventListener("change", filterAnimations);
 
+// Sort toggle event listeners
+if (sortCourseBtn && sortTopicBtn) {
+  sortCourseBtn.addEventListener("click", () => {
+    currentGroupBy = "course";
+    updateSort();
+  });
+  sortTopicBtn.addEventListener("click", () => {
+    currentGroupBy = "topic";
+    updateSort();
+  });
+}
+
 // Educator Tabs & Form Handling
 manageTabBtn.addEventListener("click", () => {
   manageTabBtn.classList.add("active");
   addTabBtn.classList.remove("active");
   manageSection.classList.remove("hidden");
   addSection.classList.add("hidden");
-  renderAnimations(educatorAnimationList, { isEducator: true });
+  renderAnimationsRows(educatorAnimationList, {
+    isEducator: true,
+    groupBy: "course" // or "topic" if you prefer
+  });
+  
 });
 
 let pythonEditor;
@@ -142,7 +185,6 @@ newAnimationForm.addEventListener("submit", e => {
   manageTabBtn.click();
   newAnimationForm.reset();
 });
-
 
 // Load .py file into editor
 pythonFileInput.addEventListener("change", (e) => {
