@@ -34,7 +34,11 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Serve static files from the public folder
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Sample data (for API purposes if needed)
 let animations = [
