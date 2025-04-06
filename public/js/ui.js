@@ -1,5 +1,5 @@
 // ui.js
-import { getAnimations, setAnimations } from './data.js';
+import { getAnimations, deleteAnimation } from './data.js';
 import { showDetail } from './video.js';
 
 function createAnimationCard(anim, isEducator = false) {
