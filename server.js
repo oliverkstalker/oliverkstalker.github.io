@@ -137,8 +137,18 @@ app.post('/render-manim', async (req, res) => {
     const response = await axios.post(
       process.env.MANIM_RENDER_URL,
       { code },
-      { responseType: 'stream', timeout: 2 * 60 * 1000 } // 2 minute timeout
+      { responseType: 'stream', timeout: 2 * 60 * 1000 }
     );
+
+    // 🚨 Check response status and content type
+    if (response.status !== 200 || response.headers['content-type'] !== 'video/mp4') {
+      let errorData = '';
+      for await (const chunk of response.data) {
+        errorData += chunk;
+      }
+      console.error("Remote service error:", errorData);
+      return res.status(500).json({ error: 'Remote rendering failed', details: errorData });
+    }
 
     const writer = fs.createWriteStream(outputVideoPath);
     response.data.pipe(writer);
@@ -153,10 +163,12 @@ app.post('/render-manim', async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Render request error:", error?.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to render video from remote service.' });
+    const msg = error.response?.data || error.message;
+    console.error("Render request error:", msg);
+    res.status(500).json({ error: 'Failed to render video from remote service.', details: msg });
   }
 });
+
 
 
 app.get('*', (req, res) => {
