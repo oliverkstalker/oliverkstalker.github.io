@@ -6,7 +6,7 @@ const fs = require('fs');
 const { exec } = require('child_process');
 const { v4: uuidv4 } = require('uuid');
 
-require('dotenv').config();
+// require('dotenv').config();
 const axios = require('axios');
 
 const app = express();
@@ -91,7 +91,10 @@ app.get('/api/animations', (req, res) => {
 
 app.post('/api/animations', upload.single('videoFile'), (req, res) => {
   const { title, description, course } = req.body;
-  const topics = req.body.topics ? req.body.topics.split(',') : [];
+  const topicsRaw = req.body.topics;
+  const topics = Array.isArray(topicsRaw)
+    ? topicsRaw
+    : (typeof topicsRaw === 'string' ? topicsRaw.split(',') : []);
   const file = req.file ? `/videos/${req.file.filename}` : req.body.file || '';
   
   const stmt = db.prepare(`
