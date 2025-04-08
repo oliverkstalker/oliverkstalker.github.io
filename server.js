@@ -6,6 +6,9 @@ const fs = require('fs');
 const { exec } = require('child_process');
 const { v4: uuidv4 } = require('uuid');
 
+require('dotenv').config();
+const axios = require('axios');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -121,25 +124,35 @@ app.delete('/api/animations/:id', (req, res) => {
 });
 
 
-app.post('/render-manim', (req, res) => {
-  const { filename, code } = req.body;
+app.post('/render-manim', async (req, res) => {
+  const { code } = req.body;
   const sceneId = uuidv4().slice(0, 8);
-  const tempPyPath = path.join(__dirname, `temp_${sceneId}.py`);
-  const outputVideoPath = path.join(__dirname, 'public', 'videos', `scene_${sceneId}.mp4`); 
+  const outputVideoPath = path.join(__dirname, 'public', 'videos', `scene_${sceneId}.mp4`);
+  const relativePath = `/videos/scene_${sceneId}.mp4`;
 
-  fs.writeFileSync(tempPyPath, code);
+  try {
+    const response = await axios.post(
+      process.env.MANIM_RENDER_URL,
+      { code },
+      { responseType: 'stream', timeout: 2 * 60 * 1000 } // 2 minute timeout
+    );
 
-  const manimCmd = `manim ${tempPyPath} -qm -o scene_${sceneId}.mp4 --media_dir public/videos`;
+    const writer = fs.createWriteStream(outputVideoPath);
+    response.data.pipe(writer);
 
-  exec(manimCmd, (err, stdout, stderr) => {
-    fs.unlinkSync(tempPyPath);
-    if (err) {
-      console.error("Render error:", stderr);
-      return res.status(500).json({ error: 'Failed to render Manim video.' });
-    }
-    const relativePath = `/videos/scene_${sceneId}.mp4`;
-    return res.json({ videoUrl: relativePath });
-  });
+    writer.on('finish', () => {
+      return res.json({ videoUrl: relativePath });
+    });
+
+    writer.on('error', (err) => {
+      console.error("File write error:", err);
+      res.status(500).json({ error: 'Failed to write rendered video.' });
+    });
+
+  } catch (error) {
+    console.error("Render request error:", error?.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to render video from remote service.' });
+  }
 });
 
 
