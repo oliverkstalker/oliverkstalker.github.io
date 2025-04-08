@@ -134,40 +134,57 @@ app.post('/render-manim', async (req, res) => {
   const relativePath = `/videos/scene_${sceneId}.mp4`;
 
   try {
-    const response = await axios.post(
-      process.env.MANIM_RENDER_URL,
+    // 1. Submit job to remote render service
+    const enqueueResp = await axios.post(
+      process.env.MANIM_RENDER_URL + '/render',
       { code },
-      { responseType: 'stream', timeout: 2 * 60 * 1000 }
+      { timeout: 10000 }
     );
 
-    // 🚨 Check response status and content type
-    if (response.status !== 200 || response.headers['content-type'] !== 'video/mp4') {
-      let errorData = '';
-      for await (const chunk of response.data) {
-        errorData += chunk;
-      }
-      console.error("Remote service error:", errorData);
-      return res.status(500).json({ error: 'Remote rendering failed', details: errorData });
+    const jobId = enqueueResp.data.job_id;
+    if (!jobId) throw new Error("No job_id returned by renderer");
+
+    // 2. Poll for status
+    let status = "pending";
+    let attempts = 0;
+    const maxAttempts = 30;
+
+    while (status !== "done" && status !== "error" && attempts < maxAttempts) {
+      await new Promise(r => setTimeout(r, 3000)); // Wait 3s
+      const statusResp = await axios.get(`${process.env.MANIM_RENDER_URL}/status/${jobId}`);
+      status = statusResp.data.status;
+      attempts++;
     }
 
+    if (status !== "done") {
+      return res.status(500).json({ error: "Render job failed or timed out." });
+    }
+
+    // 3. Download video
+    const videoResp = await axios.get(`${process.env.MANIM_RENDER_URL}/result/${jobId}`, {
+      responseType: 'stream',
+      timeout: 60000
+    });
+
     const writer = fs.createWriteStream(outputVideoPath);
-    response.data.pipe(writer);
+    videoResp.data.pipe(writer);
 
     writer.on('finish', () => {
       return res.json({ videoUrl: relativePath });
     });
 
-    writer.on('error', (err) => {
+    writer.on('error', err => {
       console.error("File write error:", err);
       res.status(500).json({ error: 'Failed to write rendered video.' });
     });
 
-  } catch (error) {
-    const msg = error.response?.data || error.message;
-    console.error("Render request error:", msg);
-    res.status(500).json({ error: 'Failed to render video from remote service.', details: msg });
+  } catch (err) {
+    const msg = err.response?.data || err.message;
+    console.error("Render error:", msg);
+    res.status(500).json({ error: 'Rendering process failed.', details: msg });
   }
 });
+
 
 
 
