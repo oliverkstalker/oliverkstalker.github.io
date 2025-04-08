@@ -50,9 +50,11 @@ function createAnimationCard(anim, isEducator = false) {
             try {
               await deleteAnimation(anim.id);
               const educatorAnimationList = document.getElementById("educator-animation-list");
+              const updatedAnimations = await getAnimations();
               renderAnimationsRows(educatorAnimationList, {
                 isEducator: true,
-                groupBy: "course"
+                groupBy: "course",
+                animations: updatedAnimations
               });
             } catch (err) {
               console.error("Error deleting animation", err);

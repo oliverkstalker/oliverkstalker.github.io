@@ -31,15 +31,23 @@ const landingPage = document.getElementById("landing-page"),
       newAnimationForm = document.getElementById("new-animation-form"),
       backToListBtn = document.getElementById("back-to-list"),
       pythonFileInput = document.getElementById("python-file"),
-      renderSaveBtn = document.getElementById("render-save-btn");
-
-// New: Sort Toggle Elements and variable for grouping mode.
-// (Make sure you add these buttons in your HTML.)
-const sortCourseBtn = document.getElementById("sort-course"),
+      renderSaveBtn = document.getElementById("render-save-btn"),
+      // New educator filter elements
+      educatorSearchInput = document.getElementById("educator-search-input"),
+      educatorCourseFilter = document.getElementById("educator-course-filter"),
+      educatorTopicFilter = document.getElementById("educator-topic-filter"),
+      educatorSearchBtn = document.getElementById("educator-search-btn"),
+      educatorSortCourse = document.getElementById("educator-sort-course"),
+      educatorSortTopic = document.getElementById("educator-sort-topic"),
+      // New student sort elements
+      sortCourseBtn = document.getElementById("sort-course"),
       sortTopicBtn = document.getElementById("sort-topic");
-let currentGroupBy = "course"; // default grouping
 
-// Function to update toggle button styles and re-render.
+// New: Sort Toggle Elements and variable for grouping mode
+let currentGroupBy = "course";
+let currentEducatorGroupBy = "course";
+
+// Function to update toggle button styles and re-render
 function updateSort() {
   if (currentGroupBy === "course") {
     sortCourseBtn.classList.add("active");
@@ -51,7 +59,19 @@ function updateSort() {
   filterAnimations();
 }
 
-// Filtering logic now using renderAnimationsRows
+// Function to update educator sort toggle button styles and re-render
+function updateEducatorSort() {
+  if (currentEducatorGroupBy === "course") {
+    educatorSortCourse.classList.add("active");
+    educatorSortTopic.classList.remove("active");
+  } else {
+    educatorSortCourse.classList.remove("active");
+    educatorSortTopic.classList.add("active");
+  }
+  filterEducatorAnimations();
+}
+
+// Filtering logic for student interface
 async function filterAnimations() {
   const searchText = searchInput.value.toLowerCase();
   const selectedCourse = courseFilter.value;
@@ -69,10 +89,35 @@ async function filterAnimations() {
       const matchesTopic = selectedTopic ? anim.topics.includes(selectedTopic) : true;
       return matchesSearch && matchesCourse && matchesTopic;
     },
-    animations  // Pass the animations array explicitly
+    animations
   });
 }
+
+// Filtering logic for educator interface
+async function filterEducatorAnimations() {
+  const searchText = educatorSearchInput.value.toLowerCase();
+  const selectedCourse = educatorCourseFilter.value;
+  const selectedTopic = educatorTopicFilter.value;
+  
+  const animations = await getAnimations();
+
+  renderAnimationsRows(educatorAnimationList, {
+    groupBy: currentEducatorGroupBy,
+    filterFn: anim => {
+      const matchesSearch =
+        anim.title.toLowerCase().includes(searchText) ||
+        anim.description.toLowerCase().includes(searchText);
+      const matchesCourse = selectedCourse ? anim.course === selectedCourse : true;
+      const matchesTopic = selectedTopic ? anim.topics.includes(selectedTopic) : true;
+      return matchesSearch && matchesCourse && matchesTopic;
+    },
+    animations,
+    isEducator: true
+  });
+}
+
 const debouncedFilter = debounce(filterAnimations, 300);
+const debouncedEducatorFilter = debounce(filterEducatorAnimations, 300);
 
 // Navigation Events
 studentModeBtn.addEventListener("click", () => {
@@ -82,13 +127,7 @@ studentModeBtn.addEventListener("click", () => {
 
 educatorModeBtn.addEventListener("click", async () => {
   showSection(educatorInterface);
-  const animations = await getAnimations();
-  renderAnimationsRows(educatorAnimationList, {
-    isEducator: true,
-    groupBy: "course", // or "topic" if you prefer
-    animations
-  });
-  
+  filterEducatorAnimations();
 });
 
 navHome.addEventListener("click", () => showSection(landingPage));
@@ -111,23 +150,39 @@ backToHomeStudent.addEventListener("click", () => showSection(landingPage));
 backToHomeEducator.addEventListener("click", () => showSection(landingPage));
 backToListBtn.addEventListener("click", () => showSection(studentInterface));
 
-// Filter events
+// Filter events for student interface
 searchBtn.addEventListener("click", filterAnimations);
 searchInput.addEventListener("keyup", debouncedFilter);
 courseFilter.addEventListener("change", filterAnimations);
 topicFilter.addEventListener("change", filterAnimations);
 
-// Sort toggle event listeners
-if (sortCourseBtn && sortTopicBtn) {
-  sortCourseBtn.addEventListener("click", () => {
-    currentGroupBy = "course";
-    updateSort();
-  });
-  sortTopicBtn.addEventListener("click", () => {
-    currentGroupBy = "topic";
-    updateSort();
-  });
-}
+// Sort toggle event listeners for student interface
+sortCourseBtn.addEventListener("click", () => {
+  currentGroupBy = "course";
+  updateSort();
+});
+
+sortTopicBtn.addEventListener("click", () => {
+  currentGroupBy = "topic";
+  updateSort();
+});
+
+// Filter events for educator interface
+educatorSearchBtn.addEventListener("click", filterEducatorAnimations);
+educatorSearchInput.addEventListener("keyup", debouncedEducatorFilter);
+educatorCourseFilter.addEventListener("change", filterEducatorAnimations);
+educatorTopicFilter.addEventListener("change", filterEducatorAnimations);
+
+// Sort toggle event listeners for educator interface
+educatorSortCourse.addEventListener("click", () => {
+  currentEducatorGroupBy = "course";
+  updateEducatorSort();
+});
+
+educatorSortTopic.addEventListener("click", () => {
+  currentEducatorGroupBy = "topic";
+  updateEducatorSort();
+});
 
 // Educator Tabs & Form Handling
 manageTabBtn.addEventListener("click", async () => {
@@ -135,13 +190,7 @@ manageTabBtn.addEventListener("click", async () => {
   addTabBtn.classList.remove("active");
   manageSection.classList.remove("hidden");
   addSection.classList.add("hidden");
-  const animations = await getAnimations();
-  renderAnimationsRows(educatorAnimationList, {
-    isEducator: true,
-    groupBy: "course", // or "topic" if you prefer
-    animations
-  });
-  
+  filterEducatorAnimations();
 });
 
 let pythonEditor;

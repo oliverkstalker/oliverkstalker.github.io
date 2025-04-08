@@ -66,6 +66,10 @@
             <option value="Differentiation">Differentiation</option>
             <option value="Integration">Integration</option>
           </select>
+          <div class="sort-toggle">
+            <button id="sort-course" class="active">Sort by Course</button>
+            <button id="sort-topic">Sort by Topic</button>
+          </div>
           <button id="search-btn">Search</button>
         </div>
         <div id="student-animation-list"></div>
@@ -84,6 +88,31 @@
           <!-- Manage Section -->
           <section id="manage-section">
             <h2>Manage Animations</h2>
+            <div class="educator-filters">
+              <input type="text" id="educator-search-input" placeholder="Search animations..." aria-label="Search animations" />
+              <select id="educator-course-filter" aria-label="Filter by Course">
+                <option value="">All Courses</option>
+                <option value="MATH 142">MATH 142</option>
+                <option value="MATH 151">MATH 151</option>
+                <option value="MATH 152">MATH 152</option>
+                <option value="MATH 171">MATH 171</option>
+                <option value="MATH 172">MATH 172</option>
+                <option value="MATH 304">MATH 304</option>
+              </select>
+              <select id="educator-topic-filter" aria-label="Filter by Topic">
+                <option value="">All Topics</option>
+                <option value="Simplex Method">Simplex Method</option>
+                <option value="Related Rates">Related Rates</option>
+                <option value="Matrix Multiplication">Matrix Multiplication</option>
+                <option value="Differentiation">Differentiation</option>
+                <option value="Integration">Integration</option>
+              </select>
+              <div class="sort-toggle">
+                <button id="educator-sort-course" class="active">Sort by Course</button>
+                <button id="educator-sort-topic">Sort by Topic</button>
+              </div>
+              <button id="educator-search-btn">Search</button>
+            </div>
             <div id="educator-animation-list" class="animation-grid"></div>
           </section>
           <!-- Add Section -->
