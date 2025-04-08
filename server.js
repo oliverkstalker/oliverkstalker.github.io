@@ -132,58 +132,50 @@ app.post('/render-manim', async (req, res) => {
   const sceneId = uuidv4().slice(0, 8);
   const outputVideoPath = path.join(__dirname, 'public', 'videos', `scene_${sceneId}.mp4`);
   const relativePath = `/videos/scene_${sceneId}.mp4`;
+  const BASE_URL = process.env.MANIM_RENDER_URL || 'https://manim-render-app.onrender.com';
 
   try {
-    // 1. Submit job to remote render service
-    const enqueueResp = await axios.post(
-      process.env.MANIM_RENDER_URL + '/render',
-      { code },
-      { timeout: 10000 }
-    );
-
+    // 1. Submit the job
+    const enqueueResp = await axios.post(`${BASE_URL}/render`, { code });
     const jobId = enqueueResp.data.job_id;
-    if (!jobId) throw new Error("No job_id returned by renderer");
 
     // 2. Poll for status
-    let status = "pending";
-    let attempts = 0;
-    const maxAttempts = 30;
+    const pollStatus = async () => {
+      const MAX_ATTEMPTS = 60;
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        await new Promise(r => setTimeout(r, 2000)); // wait 2s
+        const statusResp = await axios.get(`${BASE_URL}/status/${jobId}`);
+        if (statusResp.data.status === 'done') return;
+        if (statusResp.data.status === 'error') throw new Error('Render job failed remotely');
+      }
+      throw new Error('Render job timed out after waiting');
+    };
 
-    while (status !== "done" && status !== "error" && attempts < maxAttempts) {
-      await new Promise(r => setTimeout(r, 3000)); // Wait 3s
-      const statusResp = await axios.get(`${process.env.MANIM_RENDER_URL}/status/${jobId}`);
-      status = statusResp.data.status;
-      attempts++;
-    }
+    await pollStatus();
 
-    if (status !== "done") {
-      return res.status(500).json({ error: "Render job failed or timed out." });
-    }
-
-    // 3. Download video
-    const videoResp = await axios.get(`${process.env.MANIM_RENDER_URL}/result/${jobId}`, {
-      responseType: 'stream',
-      timeout: 60000
+    // 3. Download the result video
+    const resultResp = await axios.get(`${BASE_URL}/result/${jobId}`, {
+      responseType: 'stream'
     });
 
     const writer = fs.createWriteStream(outputVideoPath);
-    videoResp.data.pipe(writer);
+    resultResp.data.pipe(writer);
 
     writer.on('finish', () => {
-      return res.json({ videoUrl: relativePath });
+      res.json({ videoUrl: relativePath });
     });
 
-    writer.on('error', err => {
-      console.error("File write error:", err);
-      res.status(500).json({ error: 'Failed to write rendered video.' });
+    writer.on('error', (err) => {
+      console.error("Failed writing video file:", err);
+      res.status(500).json({ error: 'Failed to save rendered video.' });
     });
 
   } catch (err) {
-    const msg = err.response?.data || err.message;
-    console.error("Render error:", msg);
-    res.status(500).json({ error: 'Rendering process failed.', details: msg });
+    console.error("Render job error:", err.message || err);
+    res.status(500).json({ error: 'Render job failed.', details: err.message || err });
   }
 });
+
 
 
 
