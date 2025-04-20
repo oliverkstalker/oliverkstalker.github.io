@@ -39,8 +39,8 @@ function createAnimationCard(anim, isEducator = false) {
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.addEventListener("click", e => {
-            e.stopPropagation();
-            alert("Edit functionality is not implemented yet... check back in a few days!");
+          e.stopPropagation();
+          showEditPopup(anim);
         });
 
         const deleteBtn = document.createElement("button");
@@ -135,5 +135,92 @@ function showSection(section) {
     void section.offsetWidth; // force reflow
     section.classList.add("fade-in");
 }
+
+function showEditPopup(animation) {
+  const popup = document.createElement("div");
+  popup.className = "edit-popup";
+
+  popup.innerHTML = `
+    <div class="edit-popup-content">
+      <h3>Edit Animation Variables</h3>
+      <label>Title: <input type="text" id="edit-title" value="${animation.title}" /></label>
+      <label>Description: <textarea id="edit-description">${animation.description}</textarea></label>
+      <label>Course: <input type="text" id="edit-course" value="${animation.course}" /></label>
+      <label>Topics: <input type="text" id="edit-topics" value="${animation.topics.join(', ')}" /></label>
+      <div class="popup-buttons">
+        <button id="edit-save">Save</button>
+        <button id="edit-animation-content">Edit Animation Content</button>
+        <button id="edit-cancel">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+
+  document.getElementById("edit-cancel").onclick = () => popup.remove();
+
+  document.getElementById("edit-save").onclick = async () => {
+    const updated = {
+      ...animation,
+      title: document.getElementById("edit-title").value.trim(),
+      description: document.getElementById("edit-description").value.trim(),
+      course: document.getElementById("edit-course").value.trim(),
+      topics: document.getElementById("edit-topics").value.split(',').map(t => t.trim()).filter(Boolean)
+    };
+
+    try {
+      const res = await fetch(`/api/animations/${animation.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+      if (!res.ok) throw new Error("Failed to update animation");
+
+      const updatedAnimations = await getAnimations();
+      const container = document.getElementById("educator-animation-list");
+      renderAnimationsRows(container, {
+        animations: updatedAnimations,
+        isEducator: true,
+        groupBy: currentEducatorGroupBy
+      });
+
+      popup.remove();
+    } catch (err) {
+      alert("Update failed: " + err.message);
+    }
+  };
+
+  document.getElementById("edit-animation-content").onclick = () => {
+    const contentPopup = document.createElement("div");
+    contentPopup.className = "edit-popup";
+    contentPopup.innerHTML = `
+      <div class="edit-popup-content">
+        <h3>Edit Animation Content</h3>
+        <label>Height (cm): <input type="number" id="edit-height" value="20" /></label>
+        <label>Radius (cm): <input type="number" id="edit-radius" value="6" /></label>
+        <label>Rate of Change (cm³/s): <input type="number" id="edit-rate" value="15" /></label>
+        <label>Area (cm²): <input type="number" id="edit-area" value="50" /></label>
+        <div class="popup-buttons">
+          <button id="animation-content-save">Save Variables</button>
+          <button id="animation-content-close">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(contentPopup);
+    document.getElementById("animation-content-close").onclick = () => contentPopup.remove();
+    document.getElementById("animation-content-save").onclick = () => {
+      const vars = {
+        height: parseFloat(document.getElementById("edit-height").value),
+        radius: parseFloat(document.getElementById("edit-radius").value),
+        rate: parseFloat(document.getElementById("edit-rate").value),
+        area: parseFloat(document.getElementById("edit-area").value)
+      };
+      console.log("Saved animation variables:", vars);
+      alert("Variables saved (stub only)");
+      contentPopup.remove();
+    };
+  };
+}
+
 
 export { createAnimationCard, renderAnimations, renderAnimationsRows, showSection };
