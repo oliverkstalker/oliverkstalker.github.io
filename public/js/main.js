@@ -313,7 +313,8 @@ renderSaveBtn.addEventListener("click", async () => {
         description,
         course,
         topics,
-        file: fileUrl
+        file: fileUrl,
+        pythonCode: code || ""
       };
       await fetch("/api/animations", {
         method: "POST",
@@ -338,4 +339,36 @@ renderSaveBtn.addEventListener("click", async () => {
     alert("An error occurred while saving the animation.");
   }
 });
+
+function extractEditableVariables(code) {
+  const lines = code.split('\n');
+  const editableVars = [];
+
+  for (const line of lines) {
+    const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)_EDITABLE\s*=\s*(.+)$/);
+    if (match) {
+      let value;
+      try {
+        value = JSON.parse(match[2].replace(/'/g, '"'));
+      } catch {
+        value = match[2];
+      }
+      editableVars.push({ name: match[1], value });
+    }
+  }
+
+  return editableVars;
+}
+
+function updateEditableVariablesInCode(code, variables) {
+  let updatedCode = code;
+  for (const { name, value } of variables) {
+    const regex = new RegExp(`^${name}_EDITABLE\\s*=.*$`, 'm');
+    let valueStr = typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+    updatedCode = updatedCode.replace(regex, `${name}_EDITABLE = ${valueStr}`);
+  }
+  return updatedCode;
+}
+
+export { extractEditableVariables, updateEditableVariablesInCode };
 

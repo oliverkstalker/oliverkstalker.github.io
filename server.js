@@ -28,6 +28,7 @@ db.exec(`
   file TEXT NOT NULL,
   course TEXT,
   topics TEXT,
+  python_code TEXT,
   createdAt TEXT
 );`);
 
@@ -83,14 +84,15 @@ app.get('/api/animations', (req, res) => {
   const rows = db.prepare('SELECT * FROM animations ORDER BY createdAt DESC').all();
   const animations = rows.map(row => ({
     ...row,
-    topics: row.topics ? row.topics.split(',') : []
+    topics: row.topics ? row.topics.split(',') : [],
+    pythonCode: row.python_code || ''
   }));
   res.json(animations);
 });
 
 
 app.post('/api/animations', upload.single('videoFile'), (req, res) => {
-  const { title, description, course } = req.body;
+  const { title, description, course, pythonCode } = req.body;
   const topicsRaw = req.body.topics;
   const topics = Array.isArray(topicsRaw)
     ? topicsRaw
@@ -99,14 +101,14 @@ app.post('/api/animations', upload.single('videoFile'), (req, res) => {
   
   const stmt = db.prepare(`
     INSERT INTO animations 
-    (title, description, file, course, topics, createdAt) 
-    VALUES (?, ?, ?, ?, ?, datetime('now'))
+    (title, description, file, course, topics, python_code, createdAt) 
+    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
   `);
-  const result = stmt.run(title, description, file, course, topics.join(','));
+  const result = stmt.run(title, description, file, course,topics.join(','), pythonCode);
 
   const newAnimation = {
     id: result.lastInsertRowid,
-    title, description, file, course, topics
+    title, description, file, course, topics, pythonCode
   };
 
   res.status(201).json(newAnimation);
@@ -126,55 +128,134 @@ app.delete('/api/animations/:id', (req, res) => {
   res.status(204).send();
 });
 
+app.put('/api/animations/:id', (req, res) => {
+  const { id } = req.params;
+  const { title, description, file, course, topics, pythonCode } = req.body;
+
+  const topicsJoined = Array.isArray(topics) ? topics.join(',') : (topics || '');
+
+  const stmt = db.prepare(`
+    UPDATE animations
+    SET title = ?, description = ?, file = ?, course = ?, topics = ?, python_code = ?
+    WHERE id = ?
+  `);
+
+  try {
+    stmt.run(title, description, file, course, topicsJoined, pythonCode, id);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Error updating animation: ", err);
+    res.status(500).json({ error: "Failed to update animation" });
+  }
+});
+
+
 
 app.post('/render-manim', async (req, res) => {
   const { code } = req.body;
+  if (!code || !code.trim()) {
+    return res.status(400).json({ error: "Empty code submitted" });
+  }
+
   const sceneId = uuidv4().slice(0, 8);
-  const outputVideoPath = path.join(__dirname, 'public', 'videos', `scene_${sceneId}.mp4`);
-  const relativePath = `/videos/scene_${sceneId}.mp4`;
-  const BASE_URL = process.env.MANIM_RENDER_URL || 'https://manim-render-app.onrender.com';
+  const outPath = path.join(__dirname, 'public', 'videos', `scene_${sceneId}.mp4`);
+  const relPath = `/videos/scene_${sceneId}.mp4`;
+  const BASE_URL = 'http://127.0.0.1:5000'; // Local render server
 
   try {
-    // 1. Submit the job
-    const enqueueResp = await axios.post(`${BASE_URL}/render`, { code });
-    const jobId = enqueueResp.data.job_id;
+    // Preprocess code
+    const safeEvalPrelude = `
+def safe_eval(expr):
+    import numpy as np
+    from manim import WHITE, BLACK, RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, TEAL, GOLD, MAROON, GRAY, DARK_GRAY, LIGHT_GRAY
+    from sympy import Expr
 
-    // 2. Poll for status
-    const pollStatus = async () => {
-      const MAX_ATTEMPTS = 60;
-      for (let i = 0; i < MAX_ATTEMPTS; i++) {
-        await new Promise(r => setTimeout(r, 2000)); // wait 2s
-        const statusResp = await axios.get(`${BASE_URL}/status/${jobId}`);
-        if (statusResp.data.status === 'done') return;
-        if (statusResp.data.status === 'error') throw new Error('Render job failed remotely');
+    allowed = {
+        "PI": np.pi,
+        "pi": np.pi,
+        "e": np.e,
+        "WHITE": WHITE,
+        "BLACK": BLACK,
+        "RED": RED,
+        "GREEN": GREEN,
+        "BLUE": BLUE,
+        "YELLOW": YELLOW,
+        "ORANGE": ORANGE,
+        "PURPLE": PURPLE,
+        "PINK": PINK,
+        "TEAL": TEAL,
+        "GOLD": GOLD,
+        "MAROON": MAROON,
+        "GRAY": GRAY,
+        "DARK_GRAY": DARK_GRAY,
+        "LIGHT_GRAY": LIGHT_GRAY,
+        "x": symbols('x')  # ensure x is available if needed
+    }
+    allowed.update({k: v for k, v in np.__dict__.items() if not k.startswith("_")})
+
+    if isinstance(expr, (int, float)):
+        return expr
+    if isinstance(expr, list):
+        return [safe_eval(e) for e in expr]
+    if isinstance(expr, Expr):
+        return expr  # already a SymPy expression
+    if isinstance(expr, str):
+        return eval(expr, {"__builtins__": {}}, allowed)
+    return expr
+`;
+
+    // Extract editable variable names
+    const editableVars = [];
+    const codeLines = code.split('\n');
+    for (const line of codeLines) {
+      const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)_EDITABLE\s*=/);
+      if (match) {
+        editableVars.push(match[1] + "_EDITABLE");
       }
-      throw new Error('Render job timed out after waiting');
-    };
+    }
 
-    await pollStatus();
+    // Generate postlude: safely evaluate editable variables
+    const safeEvalPostlude = editableVars.map(varName => `${varName} = safe_eval(${varName})`).join('\n');
 
-    // 3. Download the result video
-    const resultResp = await axios.get(`${BASE_URL}/result/${jobId}`, {
-      responseType: 'stream'
-    });
+    // Final wrapped code
+    const fullCode = safeEvalPrelude + '\n' + code + '\n' + safeEvalPostlude;
 
-    const writer = fs.createWriteStream(outputVideoPath);
-    resultResp.data.pipe(writer);
+    // Send to render server
+    const renderResp = await axios.post(
+      `${BASE_URL}/render`,
+      { code: fullCode },
+      { responseType: 'stream' }
+    );
 
-    writer.on('finish', () => {
-      res.json({ videoUrl: relativePath });
-    });
-
-    writer.on('error', (err) => {
-      console.error("Failed writing video file:", err);
-      res.status(500).json({ error: 'Failed to save rendered video.' });
+    // Save the rendered video
+    const writer = fs.createWriteStream(outPath);
+    renderResp.data.pipe(writer);
+    writer.on('finish', () => res.json({ videoUrl: relPath }));
+    writer.on('error', e => {
+      console.error("Error writing video:", e);
+      res.status(500).json({ error: "Failed to save rendered video" });
     });
 
   } catch (err) {
-    console.error("Render job error:", err.message || err);
-    res.status(500).json({ error: 'Render job failed.', details: err.message || err });
+    if (err.response && err.response.data && typeof err.response.data.pipe === 'function') {
+      const chunks = [];
+      err.response.data.on('data', chunk => chunks.push(chunk));
+      err.response.data.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
+        console.error('Remote /render error body:', body);
+        return res.status(500).json({
+          error: 'Render job failed',
+          remoteStatus: err.response.status,
+          remoteError: body
+        });
+      });
+    } else {
+      console.error('Render request failed:', err.message || err);
+      return res.status(500).json({ error: err.message || String(err) });
+    }
   }
 });
+
 
 
 

@@ -1,6 +1,7 @@
 // ui.js
 import { getAnimations, deleteAnimation } from './data.js';
 import { showDetail } from './video.js';
+import { extractEditableVariables, updateEditableVariablesInCode } from './main.js';
 
 function createAnimationCard(anim, isEducator = false) {
     const card = document.createElement("div");
@@ -165,7 +166,8 @@ function showEditPopup(animation) {
       title: document.getElementById("edit-title").value.trim(),
       description: document.getElementById("edit-description").value.trim(),
       course: document.getElementById("edit-course").value.trim(),
-      topics: document.getElementById("edit-topics").value.split(',').map(t => t.trim()).filter(Boolean)
+      topics: document.getElementById("edit-topics").value.split(',').map(t => t.trim()).filter(Boolean),
+      pythonCode: animation.pythonCode
     };
 
     try {
@@ -181,7 +183,7 @@ function showEditPopup(animation) {
       renderAnimationsRows(container, {
         animations: updatedAnimations,
         isEducator: true,
-        groupBy: currentEducatorGroupBy
+        groupBy: "course"
       });
 
       popup.remove();
@@ -193,32 +195,107 @@ function showEditPopup(animation) {
   document.getElementById("edit-animation-content").onclick = () => {
     const contentPopup = document.createElement("div");
     contentPopup.className = "edit-popup";
-    contentPopup.innerHTML = `
-      <div class="edit-popup-content">
-        <h3>Edit Animation Content</h3>
-        <label>Height (cm): <input type="number" id="edit-height" value="20" /></label>
-        <label>Radius (cm): <input type="number" id="edit-radius" value="6" /></label>
-        <label>Rate of Change (cm³/s): <input type="number" id="edit-rate" value="15" /></label>
-        <label>Area (cm²): <input type="number" id="edit-area" value="50" /></label>
-        <div class="popup-buttons">
-          <button id="animation-content-save">Save Variables</button>
-          <button id="animation-content-close">Close</button>
-        </div>
-      </div>
-    `;
+  
+    const editableVars = extractEditableVariables(animation.pythonCode);
+    
+    let inner = `<div class="edit-popup-content"><h3>Edit Animation Content</h3>`;
+  
+    const inputs = {};
+    editableVars.forEach(({ name, value }) => {
+      inner += `
+        <label>${name}: <input type="text" id="edit-var-${name}" value="${Array.isArray(value) ? value.join(', ') : value}" /></label>
+      `;
+      inputs[name] = value;
+    });
+  
+    inner += `
+      <div class="popup-buttons">
+        <button id="animation-content-save">Save Variables</button>
+        <button id="animation-content-close">Close</button>
+      </div></div>`;
+  
+    contentPopup.innerHTML = inner;
     document.body.appendChild(contentPopup);
+  
     document.getElementById("animation-content-close").onclick = () => contentPopup.remove();
-    document.getElementById("animation-content-save").onclick = () => {
-      const vars = {
-        height: parseFloat(document.getElementById("edit-height").value),
-        radius: parseFloat(document.getElementById("edit-radius").value),
-        rate: parseFloat(document.getElementById("edit-rate").value),
-        area: parseFloat(document.getElementById("edit-area").value)
-      };
-      console.log("Saved animation variables:", vars);
-      alert("Variables saved (stub only)");
-      contentPopup.remove();
-    };
+  
+    document.getElementById("animation-content-save").onclick = async () => {
+      const updatedVars = editableVars.map(({ name }) => {
+        const inputVal = document.getElementById(`edit-var-${name}`).value.trim();
+        let finalValue = inputVal;
+        if (!isNaN(Number(inputVal))) {
+          finalValue = Number(inputVal);
+        } else if (inputVal.startsWith('[') && inputVal.endsWith(']')) {
+          try {
+            finalValue = JSON.parse(inputVal.replace(/'/g, '"'));
+          } catch (err) {
+            console.warn(`Invalid array syntax for ${name}`, err);
+          }
+        }
+        return { name, value: finalValue };
+      });
+    
+      const newPythonCode = updateEditableVariablesInCode(animation.pythonCode, updatedVars);
+    
+      try {
+        // Step 1: Re-render video
+        const renderResponse = await fetch('/render-manim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: newPythonCode })
+        });
+        const renderResult = await renderResponse.json();
+        const newVideoUrl = renderResult.videoUrl;
+    
+        if (!newVideoUrl) {
+          throw new Error("Failed to generate new video.");
+        }
+    
+        // Step 2: Save updated pythonCode + file
+        const updated = {
+          id: animation.id,
+          title: animation.title || "",
+          description: animation.description || "",
+          file: newVideoUrl,
+          course: animation.course || "",
+          topics: Array.isArray(animation.topics) ? animation.topics : [],
+          pythonCode: newPythonCode
+        };
+    
+        const res = await fetch(`/api/animations/${animation.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updated)
+        });
+    
+        if (!res.ok) throw new Error("Failed to save animation update");
+    
+        // Step 3: After successful save, close popups and return to Educator main screen
+        // alert("Saved animation variables and re-rendered video! Returning to main screen.");
+    
+        // Close the variable editing popup
+        contentPopup.remove();
+    
+        // Also close the parent edit popup if still open
+        const parentPopup = document.querySelector(".edit-popup");
+        if (parentPopup) {
+          parentPopup.remove();
+        }
+    
+        // Refresh the educator animation list
+        const updatedAnimations = await getAnimations();
+        const container = document.getElementById("educator-animation-list");
+        renderAnimationsRows(container, {
+          animations: updatedAnimations,
+          isEducator: true,
+          groupBy: "course"
+        });
+    
+      } catch (err) {
+        console.error("Update failed", err);
+        alert("Failed to update: " + err.message);
+      }
+    };    
   };
 }
 
