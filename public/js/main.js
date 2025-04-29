@@ -41,7 +41,12 @@ const landingPage = document.getElementById("landing-page"),
       educatorSortTopic = document.getElementById("educator-sort-topic"),
       // New student sort elements
       sortCourseBtn = document.getElementById("sort-course"),
-      sortTopicBtn = document.getElementById("sort-topic");
+      sortTopicBtn = document.getElementById("sort-topic"),
+      // login elements
+      loginSection = document.getElementById("login-section"),
+      loginForm = document.getElementById("login-form"),
+      loginCancel = document.getElementById("login-cancel"),
+      logoutBtn = document.getElementById("logout-btn");
 
 // New: Sort Toggle Elements and variable for grouping mode
 let currentGroupBy = "course";
@@ -126,8 +131,8 @@ studentModeBtn.addEventListener("click", () => {
 });
 
 educatorModeBtn.addEventListener("click", async () => {
-  showSection(educatorInterface);
-  filterEducatorAnimations();
+  showSection(loginSection);
+  // filterEducatorAnimations();
 });
 
 navHome.addEventListener("click", () => showSection(landingPage));
@@ -137,13 +142,43 @@ navStudent.addEventListener("click", () => {
 });
 navEducator.addEventListener("click", async () => {
   showSection(educatorInterface);
-  const animations = await getAnimations();
-  renderAnimationsRows(educatorAnimationList, {
-    animations,
-    isEducator: true,
-    groupBy: "course" // or "topic" if you prefer
-  });
-  
+  // const animations = await getAnimations();
+  // renderAnimationsRows(educatorAnimationList, {
+  //   animations,
+  //   isEducator: true,
+  //   groupBy: "course" // or "topic" if you prefer
+  // });
+  showSection(loginSection);
+});
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("login-username").value;
+  const password = document.getElementById("login-password").value;
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    if (!res.ok) throw new Error("Invalid Credentials");
+    // on success
+    loginForm.reset();
+    showSection(educatorInterface);
+    filterEducatorAnimations();
+  } catch (err) {
+    alert("Login failed. Please try again.");
+  } 
+});
+
+loginCancel.addEventListener("click", () => {
+  loginForm.reset();
+  showSection(landingPage);
+});
+
+logoutBtn.addEventListener("click", async () => {
+  await fetch("/api/logout", { method: "POST"});
+  showSection(landingPage);
 });
 
 backToHomeStudent.addEventListener("click", () => showSection(landingPage));

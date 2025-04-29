@@ -390,6 +390,7 @@ form:hover {
 
 .form-group input[type="text"],
 .form-group input[type="file"],
+.form-group input[type="password"],
 .form-group textarea,
 .form-group select {
   width: 100%;
@@ -539,6 +540,14 @@ footer {
 .popup-buttons button:last-child {
   background-color: #aaa;
   color: white;
+}
+
+#logout-btn {
+  margin-left: 1rem;
+  background-color: #aaa;
+}
+#logout-btn:hover {
+  background-color: #888;
 }
 
 

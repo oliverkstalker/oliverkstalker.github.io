@@ -1,3 +1,5 @@
+require('dotenv').config();
+const session = require('express-session');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -31,6 +33,21 @@ db.exec(`
   python_code TEXT,
   createdAt TEXT
 );`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT    UNIQUE NOT NULL,
+    password TEXT    NOT NULL
+  );
+`);
+const insertUser = db.prepare(
+  `INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`
+);
+
+insertUser.run('oliver', 'password');
+insertUser.run('admin', 'password');
+insertUser.run('educator', 'password');
 
 // Seed placeholder data if database is empty
 const existing = db.prepare('SELECT COUNT(*) AS count FROM animations').get();
@@ -75,10 +92,39 @@ if (existing.count === 0) {
 
 app.use(cors());
 app.use(bodyParser.json());
-
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change_this_secret',
+  resave: false,
+  saveUninitialized: false,
+}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// auth middleware
+function requireAuth(req, res, next) {
+  if (req.session.user) return next();
+  res.status(401).json({ error: 'Unauthorized' });
+}
+
+// in your login handler:
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  const row = db
+    .prepare('SELECT * FROM users WHERE username = ?')
+    .get(username);
+
+  if (!row) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  if (password === row.password) {
+    req.session.user = { username };
+    return res.json({ success: true });
+  }
+
+
+  res.status(401).json({ error: 'Invalid credentials' });
+});
 
 app.get('/api/animations', (req, res) => {
   const rows = db.prepare('SELECT * FROM animations ORDER BY createdAt DESC').all();
@@ -91,7 +137,7 @@ app.get('/api/animations', (req, res) => {
 });
 
 
-app.post('/api/animations', upload.single('videoFile'), (req, res) => {
+app.post('/api/animations', requireAuth, upload.single('videoFile'), (req, res) => {
   const { title, description, course, pythonCode } = req.body;
   const topicsRaw = req.body.topics;
   const topics = Array.isArray(topicsRaw)
@@ -115,7 +161,7 @@ app.post('/api/animations', upload.single('videoFile'), (req, res) => {
 });
 
 
-app.delete('/api/animations/:id', (req, res) => {
+app.delete('/api/animations/:id', requireAuth, (req, res) => {
   const { id } = req.params;
   const animation = db.prepare('SELECT * FROM animations WHERE id = ?').get(id);
 
@@ -128,7 +174,7 @@ app.delete('/api/animations/:id', (req, res) => {
   res.status(204).send();
 });
 
-app.put('/api/animations/:id', (req, res) => {
+app.put('/api/animations/:id', requireAuth, (req, res) => {
   const { id } = req.params;
   const { title, description, file, course, topics, pythonCode } = req.body;
 
@@ -151,7 +197,7 @@ app.put('/api/animations/:id', (req, res) => {
 
 
 
-app.post('/render-manim', async (req, res) => {
+app.post('/render-manim', requireAuth, async (req, res) => {
   const { code } = req.body;
   if (!code || !code.trim()) {
     return res.status(400).json({ error: "Empty code submitted" });
