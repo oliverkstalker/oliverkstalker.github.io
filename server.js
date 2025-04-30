@@ -93,7 +93,7 @@ if (existing.count === 0) {
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(session,({
+app.use(session({
   store: new SQLiteStore({
     client: db,
     expired: {
