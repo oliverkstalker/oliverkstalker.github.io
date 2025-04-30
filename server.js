@@ -18,6 +18,12 @@ const PORT = process.env.PORT || 5001;
 const Database = require('better-sqlite3');  
 const db = new Database('./animations.db');
 
+
+const uploadDir = path.join(__dirname, 'public', 'videos');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const multer = require('multer');
 const upload = multer({
   dest: path.join(__dirname, 'public', 'videos') 
@@ -149,27 +155,68 @@ app.get('/api/animations', (req, res) => {
 
 
 app.post('/api/animations', requireAuth, upload.single('videoFile'), (req, res) => {
+  console.log("/api/animations POST request received");
+  console.log(" req.file = ", req.file);
+  console.log(" req.body = ", req.body);
+
+  // 1) If we got a file, rename it to preserve its original extension
+  if (req.file) {
+    const { destination, filename, originalname } = req.file;
+    const ext     = path.extname(originalname);                   // e.g. ".mp4"
+    const newName = filename + ext;                               // e.g. "abcd1234.mp4"
+    const oldPath = path.join(destination, filename);
+    const newPath = path.join(destination, newName);
+
+    try {
+      fs.renameSync(oldPath, newPath);
+      req.file.filename = newName;  // so that below we point to the .mp4 file
+    } catch (err) {
+      console.error("Failed to rename uploaded file:", err);
+      return res.status(500).json({ error: "File processing error" });
+    }
+  }
+
+  // 2) Parse form data
   const { title, description, course, pythonCode } = req.body;
   const topicsRaw = req.body.topics;
   const topics = Array.isArray(topicsRaw)
     ? topicsRaw
     : (typeof topicsRaw === 'string' ? topicsRaw.split(',') : []);
-  const file = req.file ? `/videos/${req.file.filename}` : req.body.file || '';
-  
+
+  // 3) Build the file URL (with .mp4 on the end now)
+  const fileUrl = req.file
+    ? `/videos/${req.file.filename}`
+    : (req.body.file || '');
+
+  // 4) Insert into the database
   const stmt = db.prepare(`
     INSERT INTO animations 
-    (title, description, file, course, topics, python_code, createdAt) 
+      (title, description, file, course, topics, python_code, createdAt) 
     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
   `);
-  const result = stmt.run(title, description, file, course,topics.join(','), pythonCode);
+  const result = stmt.run(
+    title,
+    description,
+    fileUrl,
+    course,
+    topics.join(','),
+    pythonCode
+  );
 
+  // 5) Return the new record
   const newAnimation = {
     id: result.lastInsertRowid,
-    title, description, file, course, topics, pythonCode
+    title,
+    description,
+    file: fileUrl,
+    course,
+    topics,
+    pythonCode
   };
 
   res.status(201).json(newAnimation);
 });
+
 
 
 app.delete('/api/animations/:id', requireAuth, (req, res) => {
@@ -217,9 +264,9 @@ app.post('/render-manim', requireAuth, async (req, res) => {
   const sceneId = uuidv4().slice(0, 8);
   const outPath = path.join(__dirname, 'public', 'videos', `scene_${sceneId}.mp4`);
   const relPath = `/videos/scene_${sceneId}.mp4`;
-  // const BASE_URL = 'http://127.0.0.1:5000'; // Local render server
+  const BASE_URL = 'http://127.0.0.1:5000'; // Local render server
   // const BASE_URL = 'https://manim-render-app.onrender.com'; // Remote render server
-  const BASE_URL = 'https://manim-render-app-1.onrender.com'; // Remote render server
+  // const BASE_URL = 'https://manim-render-app-1.onrender.com'; // Remote render server
 
   try {
     // Preprocess code
