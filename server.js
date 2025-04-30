@@ -1,5 +1,6 @@
 require('dotenv').config();
 const session = require('express-session');
+const SQLiteStore = require('better-sqlite3-session-store')(session);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -92,10 +93,20 @@ if (existing.count === 0) {
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(session({
+app.use(session,({
+  store: new SQLiteStore({
+    client: db,
+    expired: {
+      clear: true,
+      intervalMs: 900000 // 15 minutes
+    }
+  }),
   secret: process.env.SESSION_SECRET || 'change_this_secret',
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 // 1 day
+  }
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
