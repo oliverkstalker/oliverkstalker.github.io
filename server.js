@@ -218,7 +218,8 @@ app.post('/render-manim', requireAuth, async (req, res) => {
   const outPath = path.join(__dirname, 'public', 'videos', `scene_${sceneId}.mp4`);
   const relPath = `/videos/scene_${sceneId}.mp4`;
   // const BASE_URL = 'http://127.0.0.1:5000'; // Local render server
-  const BASE_URL = 'https://manim-render-app.onrender.com'; // Remote render server
+  // const BASE_URL = 'https://manim-render-app.onrender.com'; // Remote render server
+  const BASE_URL = 'https://manim-render-app-1.onrender.com'; // Remote render server
 
   try {
     // Preprocess code
